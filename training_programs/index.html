@@ -1,0 +1,967 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Training plan</title>
+
+  <style>
+    :root{
+      --bg:#f5f6f8;
+      --paper:#ffffff;
+      --ink:#111827;
+      --muted:#6b7280;
+      --line:#d1d5db;
+      --soft:#eef2f7;
+
+      --radius:14px;
+      --focus:#2563eb;
+
+      --w-ex: 210px;
+      --w-tempo: 92px;
+
+      --i-left-head:#d7f3df;
+      --i-left-col:#e6f7ec;
+      --i-session-head:#d7f3df;
+      --i-session-sub:#effbf3;
+      --i-block-head:#f0fbf3;
+    }
+
+    *{box-sizing:border-box}
+    body{
+      margin:0;
+      background:var(--bg);
+      color:var(--ink);
+      font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Arial, "Noto Sans", "Liberation Sans", sans-serif;
+    }
+
+    /* Used for "lock scroll" when modal is open */
+    body.modal-open{
+      overflow:hidden;
+      position:fixed;
+      width:100%;
+    }
+
+    .wrap{max-width:1100px;margin:0 auto;padding:14px;}
+    .paper{
+      background:var(--paper);
+      border:1px solid var(--line);
+      border-radius:var(--radius);
+      padding:16px;
+    }
+
+    .topbar{
+      display:flex;
+      align-items:flex-start;
+      justify-content:space-between;
+      gap:12px;
+      flex-wrap:wrap;
+      padding-bottom:12px;
+      border-bottom:2px solid var(--ink);
+      margin-bottom:14px;
+    }
+    .brand h1{margin:0;font-size:18px;font-weight:900;letter-spacing:.2px;}
+
+    .actions{display:flex;gap:8px;flex-wrap:wrap;align-items:center;justify-content:flex-end;}
+    .btn{
+      border:1px solid var(--line);
+      background:var(--paper);
+      color:var(--ink);
+      border-radius:12px;
+      padding:10px 12px;
+      font-size:12px;
+      cursor:pointer;
+      line-height:1;
+      white-space:nowrap;
+    }
+    .btn:hover{background:var(--soft)}
+    .btn:active{transform:translateY(1px)}
+    .btn.danger{color:#991b1b;border-color:#ef4444}
+    .btn.danger:hover{background:#fef2f2}
+    .btn:disabled{
+      opacity:.45;
+      cursor:not-allowed;
+      transform:none;
+    }
+    .btn:disabled:hover{background:var(--paper)}
+
+    .meta{
+      display:flex;gap:10px;flex-wrap:wrap;align-items:flex-start;
+      margin: 10px 0 12px;
+    }
+    .field{display:grid;gap:6px;min-width:160px;}
+    .field label{font-size:11px;color:var(--muted)}
+    .control{
+      border:1px solid var(--line);
+      border-radius:12px;
+      padding:10px 12px;
+      font-size:13px;
+      outline:none;
+      background:var(--paper);
+    }
+    .control:focus{border-color:var(--focus);box-shadow:0 0 0 3px rgba(37,99,235,.14);}
+
+    .blocks{display:grid;gap:12px;margin-top:8px;}
+
+    .block-card{
+      border:1px solid var(--line);
+      border-radius:14px;
+      overflow:hidden;
+      background:var(--paper);
+    }
+
+    .block-head{
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:10px;
+      flex-wrap:wrap;
+      padding:10px 12px;
+      background: var(--i-block-head);
+      border-bottom:1px solid var(--line);
+    }
+    .block-left{display:flex;align-items:center;gap:10px;flex-wrap:wrap;}
+    .block-right{display:flex;align-items:center;gap:8px;flex-wrap:wrap;justify-content:flex-end;}
+
+    .block-name{
+      font-weight:900;
+      font-size:13px;
+      padding:8px 10px;
+      border:1px solid var(--line);
+      border-radius:12px;
+      background:#fff;
+      outline:none;
+      min-width:140px;
+    }
+    .block-name:focus{border-color:var(--focus);box-shadow:0 0 0 3px rgba(37,99,235,.14);}
+
+    .table-wrap{overflow:auto;background:var(--paper);}
+
+    table{border-collapse:collapse;width:max(980px, 100%);}
+    th, td{
+      border-right:1px solid var(--line);
+      border-bottom:1px solid var(--line);
+      padding:8px 8px;
+      vertical-align:middle;
+    }
+    tr:last-child td{border-bottom:none;}
+    th:last-child, td:last-child{border-right:none;}
+
+    thead th{
+      position:sticky;
+      top:0;
+      z-index:2;
+      font-size:11px;
+      color:var(--muted);
+      letter-spacing:.2px;
+      background:#fff;
+      text-align:left;
+      white-space:nowrap;
+    }
+
+    .left-banner{
+      background: var(--i-left-head) !important;
+      color: var(--ink) !important;
+      font-weight:900;
+      font-size:12px;
+      letter-spacing:.2px;
+    }
+    .left-head{
+      background: var(--i-left-head) !important;
+      color: var(--ink) !important;
+      font-weight:900;
+    }
+    .left-col{ background: var(--i-left-col); }
+
+    .session-group{
+      background: var(--i-session-head) !important;
+      color: var(--ink) !important;
+      font-weight:900;
+    }
+    .session-sub{
+      background: var(--i-session-sub) !important;
+      color: var(--muted) !important;
+      font-weight:700;
+    }
+
+    .sticky-col-1{position:sticky;left:0;z-index:3;}
+    .sticky-col-2{position:sticky;left:var(--w-ex);z-index:3;}
+
+    .col-exercise{min-width:var(--w-ex);max-width:var(--w-ex);}
+    .col-tempo{min-width:var(--w-tempo);max-width:var(--w-tempo);}
+
+    .cell-input{
+      width:100%;
+      border:1px solid var(--line);
+      border-radius:10px;
+      padding:7px 8px;
+      font-size:13px;
+      outline:none;
+      background:#fff;
+      color:var(--ink);
+    }
+    .cell-input:focus{border-color:var(--focus);box-shadow:0 0 0 3px rgba(37,99,235,.14);}
+
+    .cell-input.header{
+      font-weight:900;
+      font-size:12px;
+      padding:6px 8px;
+      background:#fff;
+    }
+
+    .cell-input.tight{padding:6px 7px;font-size:13px;}
+    .cell-input.num{max-width:92px;}
+
+    .intensity-wrap{display:flex;align-items:center;gap:8px;}
+    .intensity-label{font-size:11px;color:var(--muted);font-weight:900;letter-spacing:.2px;}
+    .intensity-select{
+      border:1px solid var(--line);
+      border-radius:12px;
+      padding:8px 10px;
+      font-size:12px;
+      font-weight:900;
+      background:#fff;
+      outline:none;
+      cursor:pointer;
+    }
+    .intensity-select:focus{border-color:var(--focus);box-shadow:0 0 0 3px rgba(37,99,235,.14);}
+
+    .block-card[data-type="week"][data-intensity="low"]{
+      --i-left-head:#d7f3df; --i-left-col:#e6f7ec;
+      --i-session-head:#d7f3df; --i-session-sub:#effbf3;
+      --i-block-head:#f0fbf3;
+    }
+    .block-card[data-type="week"][data-intensity="medium"]{
+      --i-left-head:#cfe8ff; --i-left-col:#dbeafe;
+      --i-session-head:#dbeafe; --i-session-sub:#eff6ff;
+      --i-block-head:#eef2f7;
+    }
+    .block-card[data-type="week"][data-intensity="high"]{
+      --i-left-head:#ffe2c7; --i-left-col:#fff0e3;
+      --i-session-head:#ffe2c7; --i-session-sub:#fff6ee;
+      --i-block-head:#fff6ee;
+    }
+    .block-card[data-type="week"][data-intensity="deload"]{
+      --i-left-head:#d9f2e3; --i-left-col:#ecf8f1;
+      --i-session-head:#d9f2e3; --i-session-sub:#f3fbf6;
+      --i-block-head:#f3fbf6;
+    }
+
+    .block-card[data-type="test"]{
+      --i-left-head:#ffe1e1; --i-left-col:#ffefef;
+      --i-session-head:#ffe1e1; --i-session-sub:#fff4f4;
+      --i-block-head:#fff4f4;
+    }
+
+    @media (max-width:820px){
+      :root{ --w-ex: 190px; --w-tempo: 88px; }
+      table{width:max(880px, 100%);}
+    }
+
+    .modal-backdrop{
+      position:fixed; inset:0;
+      background:rgba(17,24,39,.45);
+      display:none;
+      align-items:center;
+      justify-content:center;
+      padding:16px;
+      z-index:9999;
+    }
+    .modal-backdrop.open{display:flex;}
+    .modal{
+      width:min(420px, 100%);
+      background:#fff;
+      border:1px solid var(--line);
+      border-radius:16px;
+      box-shadow:0 20px 60px rgba(0,0,0,.25);
+      overflow:hidden;
+    }
+    .modal-body{padding:16px;display:grid;gap:10px;}
+    .modal-title{font-weight:900;font-size:14px;margin:0;}
+    .modal-text{margin:0;font-size:13px;color:var(--muted);line-height:1.35;}
+    .modal-actions{
+      display:flex;
+      gap:8px;
+      justify-content:flex-end;
+      padding:12px 16px 16px;
+      border-top:1px solid var(--line);
+      background:#fff;
+    }
+  </style>
+</head>
+
+<body>
+  <div class="wrap">
+    <div class="paper">
+      <div class="topbar">
+        <div class="brand">
+          <h1>Training Plan</h1>
+        </div>
+
+        <div class="actions" aria-label="Controls">
+          <button class="btn" type="button" id="undoBtn" disabled>Undo</button>
+          <button class="btn" type="button" id="redoBtn" disabled>Redo</button>
+
+          <button class="btn" type="button" id="addWeekBtn">Add week</button>
+          <button class="btn danger" type="button" id="removeWeekBtn">Remove last week</button>
+          <button class="btn" type="button" id="addTestBtn">Add test</button>
+          <button class="btn danger" type="button" id="removeTestBtn">Remove last test</button>
+        </div>
+      </div>
+
+      <div class="meta" aria-label="Client and block info">
+        <div class="field">
+          <label for="clientName">Client</label>
+          <input class="control" id="clientName" placeholder="Client name" data-field="client" />
+        </div>
+        <div class="field">
+          <label for="blockName">Block</label>
+          <input class="control" id="blockName" placeholder="e.g., Strength" data-field="block" />
+        </div>
+      </div>
+
+      <div class="blocks" id="blocks"></div>
+    </div>
+  </div>
+
+  <div class="modal-backdrop" id="confirmBackdrop" role="dialog" aria-modal="true" aria-labelledby="confirmTitle">
+    <div class="modal">
+      <div class="modal-body">
+        <p class="modal-title" id="confirmTitle">Confirm</p>
+        <p class="modal-text" id="confirmText">Are you sure?</p>
+      </div>
+      <div class="modal-actions">
+        <button class="btn" type="button" id="confirmNoBtn">No</button>
+        <button class="btn danger" type="button" id="confirmYesBtn">Yes</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const blocksEl = document.getElementById("blocks");
+
+    const addWeekBtn = document.getElementById("addWeekBtn");
+    const removeWeekBtn = document.getElementById("removeWeekBtn");
+    const addTestBtn = document.getElementById("addTestBtn");
+    const removeTestBtn = document.getElementById("removeTestBtn");
+
+    const undoBtn = document.getElementById("undoBtn");
+    const redoBtn = document.getElementById("redoBtn");
+
+    let sessionCount = 4;
+    let weekCount = 0;
+    let testCount = 0;
+
+    // ---------- Confirm modal ----------
+    const confirmBackdrop = document.getElementById("confirmBackdrop");
+    const confirmText = document.getElementById("confirmText");
+    const confirmYesBtn = document.getElementById("confirmYesBtn");
+    const confirmNoBtn = document.getElementById("confirmNoBtn");
+
+    let confirmResolver = null;
+    let lastFocusedEl = null;
+
+    // Scroll lock state
+    let scrollYBeforeModal = 0;
+
+    function lockBackgroundScroll(){
+      scrollYBeforeModal = window.scrollY || 0;
+      document.body.classList.add("modal-open");
+      document.body.style.top = `-${scrollYBeforeModal}px`;
+    }
+
+    function unlockBackgroundScroll(){
+      document.body.classList.remove("modal-open");
+      const top = document.body.style.top;
+      document.body.style.top = "";
+      const y = top ? Math.abs(parseInt(top, 10)) : scrollYBeforeModal;
+      window.scrollTo(0, y);
+    }
+
+    function openConfirm(message){
+      lastFocusedEl = document.activeElement;
+
+      confirmText.textContent = message || "Are you sure?";
+      lockBackgroundScroll();
+
+      confirmBackdrop.classList.add("open");
+      setTimeout(() => confirmNoBtn.focus(), 0);
+
+      return new Promise((resolve) => { confirmResolver = resolve; });
+    }
+
+    function closeConfirm(result){
+      confirmBackdrop.classList.remove("open");
+      unlockBackgroundScroll();
+
+      const resolve = confirmResolver;
+      confirmResolver = null;
+      if (typeof resolve === "function") resolve(result);
+      if (lastFocusedEl && typeof lastFocusedEl.focus === "function") lastFocusedEl.focus();
+    }
+
+    confirmYesBtn.addEventListener("click", () => closeConfirm(true));
+    confirmNoBtn.addEventListener("click", () => closeConfirm(false));
+    confirmBackdrop.addEventListener("click", (e) => {
+      if (e.target === confirmBackdrop) closeConfirm(false);
+    });
+    document.addEventListener("keydown", (e) => {
+      if (!confirmBackdrop.classList.contains("open")) return;
+      if (e.key === "Escape") closeConfirm(false);
+    });
+
+    // ---------- Undo/Redo (structural) ----------
+    let uidCounter = 1;
+    const undoStack = [];
+    const redoStack = [];
+    const MAX_HISTORY = 30;
+
+    function ensureUid(el){
+      if (!el.dataset.uid){
+        el.dataset.uid = String(uidCounter++);
+      }
+    }
+
+    function captureSnapshot(){
+      blocksEl.querySelectorAll("input, select, textarea").forEach(ensureUid);
+
+      const values = [];
+      blocksEl.querySelectorAll("input, select, textarea").forEach(el => {
+        values.push({
+          uid: el.dataset.uid,
+          value: el.value,
+          checked: el.type === "checkbox" ? el.checked : undefined
+        });
+      });
+
+      return {
+        html: blocksEl.innerHTML,
+        sessionCount,
+        weekCount,
+        testCount,
+        uidCounter,
+        values
+      };
+    }
+
+    function restoreSnapshot(snap){
+      blocksEl.innerHTML = snap.html;
+      sessionCount = snap.sessionCount;
+      weekCount = snap.weekCount;
+      testCount = snap.testCount;
+      uidCounter = snap.uidCounter;
+
+      snap.values.forEach(v => {
+        const el = blocksEl.querySelector(`[data-uid="${CSS.escape(v.uid)}"]`);
+        if (!el) return;
+        if (el.type === "checkbox") el.checked = !!v.checked;
+        else el.value = v.value;
+      });
+
+      wireAllCards();
+      updateUndoRedoButtons();
+    }
+
+    function pushUndo(){
+      undoStack.push(captureSnapshot());
+      if (undoStack.length > MAX_HISTORY) undoStack.shift();
+      redoStack.length = 0;
+      updateUndoRedoButtons();
+    }
+
+    function updateUndoRedoButtons(){
+      undoBtn.disabled = undoStack.length === 0;
+      redoBtn.disabled = redoStack.length === 0;
+    }
+
+    function undo(){
+      if (!undoStack.length) return;
+      const current = captureSnapshot();
+      const prev = undoStack.pop();
+      redoStack.push(current);
+      restoreSnapshot(prev);
+    }
+
+    function redo(){
+      if (!redoStack.length) return;
+      const current = captureSnapshot();
+      const next = redoStack.pop();
+      undoStack.push(current);
+      restoreSnapshot(next);
+    }
+
+    undoBtn.addEventListener("click", undo);
+    redoBtn.addEventListener("click", redo);
+
+    // ---------- UI builders ----------
+    function makeInput({placeholder="", value="", field="", week=null, test=null, session=null, row=null, type="text", inputmode=null, cls=""}){
+      const input = document.createElement("input");
+      input.className = "cell-input" + (cls ? " " + cls : "");
+      input.type = type;
+      input.placeholder = placeholder;
+      if (value !== "") input.value = value;
+
+      if (inputmode) input.inputMode = inputmode;
+      if (field) input.dataset.field = field;
+      if (week !== null) input.dataset.week = String(week);
+      if (test !== null) input.dataset.test = String(test);
+      if (session !== null) input.dataset.session = String(session);
+      if (row !== null) input.dataset.exerciseRow = String(row);
+
+      ensureUid(input);
+      return input;
+    }
+
+    function buildTableHead({type, weekIndex=null, testIndex=null, intensity="low"}){
+      const thead = document.createElement("thead");
+
+      const r1 = document.createElement("tr");
+      r1.className = "groupHeaderRow";
+
+      const leftBanner = document.createElement("th");
+      leftBanner.className = "left-banner sticky-col-1 col-exercise";
+      leftBanner.colSpan = 2;
+
+      if (type === "week"){
+        const wrap = document.createElement("div");
+        wrap.className = "intensity-wrap";
+
+        const label = document.createElement("span");
+        label.className = "intensity-label";
+        label.textContent = "Intensity:";
+
+        const select = document.createElement("select");
+        select.className = "intensity-select";
+        select.dataset.role = "intensity";
+        select.dataset.week = String(weekIndex);
+
+        const options = [
+          { value: "low", text: "Low" },
+          { value: "medium", text: "Medium" },
+          { value: "high", text: "High" },
+          { value: "deload", text: "Deload" }
+        ];
+        options.forEach(o => {
+          const opt = document.createElement("option");
+          opt.value = o.value;
+          opt.textContent = o.text;
+          select.appendChild(opt);
+        });
+        select.value = intensity;
+
+        ensureUid(select);
+
+        wrap.appendChild(label);
+        wrap.appendChild(select);
+        leftBanner.appendChild(wrap);
+      } else {
+        const wrap = document.createElement("div");
+        wrap.className = "intensity-wrap";
+
+        const label = document.createElement("span");
+        label.className = "intensity-label";
+        label.textContent = "Test:";
+
+        const note = document.createElement("span");
+        note.style.fontSize = "12px";
+        note.style.fontWeight = "900";
+        note.style.color = "var(--ink)";
+        note.textContent = "Results";
+
+        wrap.appendChild(label);
+        wrap.appendChild(note);
+        leftBanner.appendChild(wrap);
+      }
+
+      r1.appendChild(leftBanner);
+
+      for (let s = 1; s <= sessionCount; s++){
+        const th = document.createElement("th");
+        th.className = "session-group";
+        th.colSpan = 3;
+
+        const name = document.createElement("input");
+        name.className = "cell-input header";
+        name.value = `Session ${s}`;
+        name.dataset.role = "session-name";
+        name.dataset.session = String(s);
+        name.dataset.field = "session_name";
+
+        if (type === "week") name.dataset.week = String(weekIndex);
+        if (type === "test") name.dataset.test = String(testIndex);
+
+        ensureUid(name);
+
+        th.appendChild(name);
+        r1.appendChild(th);
+      }
+
+      const r2 = document.createElement("tr");
+      r2.className = "subHeaderRow";
+
+      const thEx = document.createElement("th");
+      thEx.className = "left-head sticky-col-1 col-exercise";
+      thEx.textContent = "Exercise";
+
+      const thTempo = document.createElement("th");
+      thTempo.className = "left-head sticky-col-2 col-tempo";
+      thTempo.textContent = "Tempo";
+
+      r2.appendChild(thEx);
+      r2.appendChild(thTempo);
+
+      for (let s = 1; s <= sessionCount; s++){
+        const thSets = document.createElement("th");
+        thSets.className = "session-sub";
+        thSets.textContent = "Sets";
+
+        const thReps = document.createElement("th");
+        thReps.className = "session-sub";
+        thReps.textContent = "Reps";
+
+        const thLoad = document.createElement("th");
+        thLoad.className = "session-sub";
+        thLoad.textContent = "Load (kg)";
+
+        r2.appendChild(thSets);
+        r2.appendChild(thReps);
+        r2.appendChild(thLoad);
+      }
+
+      thead.appendChild(r1);
+      thead.appendChild(r2);
+      return thead;
+    }
+
+    function addExerciseRow(card){
+      const type = card.dataset.type;
+      const weekIndex = type === "week" ? Number(card.dataset.week) : null;
+      const testIndex = type === "test" ? Number(card.dataset.test) : null;
+
+      const tbody = card.querySelector("tbody");
+      const rowIndex = tbody.children.length + 1;
+
+      const tr = document.createElement("tr");
+      tr.dataset.exerciseRow = String(rowIndex);
+
+      const tdExercise = document.createElement("td");
+      tdExercise.className = "left-col sticky-col-1 col-exercise";
+      tdExercise.appendChild(makeInput({
+        placeholder:"Exercise name",
+        field:"exercise",
+        week:weekIndex,
+        test:testIndex,
+        row:rowIndex
+      }));
+
+      const tdTempo = document.createElement("td");
+      tdTempo.className = "left-col sticky-col-2 col-tempo";
+      tdTempo.appendChild(makeInput({
+        placeholder:"3-0-1-0",
+        value:"0-0-0-0",
+        field:"tempo",
+        week:weekIndex,
+        test:testIndex,
+        row:rowIndex,
+        type:"text",
+        cls:"tight"
+      }));
+
+      tr.appendChild(tdExercise);
+      tr.appendChild(tdTempo);
+
+      for (let s = 1; s <= sessionCount; s++){
+        const tdSets = document.createElement("td");
+        tdSets.appendChild(makeInput({ field:"sets", week:weekIndex, test:testIndex, session:s, row:rowIndex, type:"text", inputmode:"numeric", cls:"tight num" }));
+
+        const tdReps = document.createElement("td");
+        tdReps.appendChild(makeInput({ field:"reps", week:weekIndex, test:testIndex, session:s, row:rowIndex, type:"text", inputmode:"numeric", cls:"tight num" }));
+
+        const tdLoad = document.createElement("td");
+        tdLoad.appendChild(makeInput({ field:"load_kg", week:weekIndex, test:testIndex, session:s, row:rowIndex, type:"text", inputmode:"decimal", cls:"tight num" }));
+
+        tr.appendChild(tdSets);
+        tr.appendChild(tdReps);
+        tr.appendChild(tdLoad);
+      }
+
+      tbody.appendChild(tr);
+    }
+
+    async function removeLastExerciseRow(card){
+      const tbody = card.querySelector("tbody");
+      if (!tbody.children.length) return;
+
+      const ok = await openConfirm("Delete last exercise row?");
+      if (!ok) return;
+
+      pushUndo();
+      tbody.removeChild(tbody.lastElementChild);
+    }
+
+    function syncSessionNamesAcrossBlocks(){
+      const first = blocksEl.querySelector(".block-card");
+      if (!first) return;
+      const names = [...first.querySelectorAll('[data-role="session-name"]')].map(i => i.value);
+
+      [...blocksEl.querySelectorAll(".block-card")].forEach(card => {
+        const inputs = card.querySelectorAll('[data-role="session-name"]');
+        inputs.forEach((inp, idx) => { if (names[idx] !== undefined) inp.value = names[idx]; });
+      });
+    }
+
+    function addSession(){
+      pushUndo();
+      sessionCount += 1;
+
+      [...blocksEl.querySelectorAll(".block-card")].forEach(card => {
+        const type = card.dataset.type;
+        const weekIndex = type === "week" ? Number(card.dataset.week) : null;
+        const testIndex = type === "test" ? Number(card.dataset.test) : null;
+
+        const table = card.querySelector("table");
+        const groupRow = table.querySelector(".groupHeaderRow");
+        const subRow = table.querySelector(".subHeaderRow");
+        const tbody = table.querySelector("tbody");
+
+        const thGroup = document.createElement("th");
+        thGroup.className = "session-group";
+        thGroup.colSpan = 3;
+
+        const name = document.createElement("input");
+        name.className = "cell-input header";
+        name.value = `Session ${sessionCount}`;
+        name.dataset.role = "session-name";
+        name.dataset.session = String(sessionCount);
+        name.dataset.field = "session_name";
+        if (weekIndex !== null) name.dataset.week = String(weekIndex);
+        if (testIndex !== null) name.dataset.test = String(testIndex);
+        ensureUid(name);
+
+        thGroup.appendChild(name);
+        groupRow.appendChild(thGroup);
+
+        const thSets = document.createElement("th"); thSets.className = "session-sub"; thSets.textContent = "Sets";
+        const thReps = document.createElement("th"); thReps.className = "session-sub"; thReps.textContent = "Reps";
+        const thLoad = document.createElement("th"); thLoad.className = "session-sub"; thLoad.textContent = "Load (kg)";
+
+        subRow.appendChild(thSets); subRow.appendChild(thReps); subRow.appendChild(thLoad);
+
+        [...tbody.children].forEach((tr, idx) => {
+          const rowIndex = idx + 1;
+
+          const tdSets = document.createElement("td");
+          tdSets.appendChild(makeInput({ field:"sets", week:weekIndex, test:testIndex, session:sessionCount, row:rowIndex, type:"text", inputmode:"numeric", cls:"tight num" }));
+
+          const tdReps = document.createElement("td");
+          tdReps.appendChild(makeInput({ field:"reps", week:weekIndex, test:testIndex, session:sessionCount, row:rowIndex, type:"text", inputmode:"numeric", cls:"tight num" }));
+
+          const tdLoad = document.createElement("td");
+          tdLoad.appendChild(makeInput({ field:"load_kg", week:weekIndex, test:testIndex, session:sessionCount, row:rowIndex, type:"text", inputmode:"decimal", cls:"tight num" }));
+
+          tr.appendChild(tdSets); tr.appendChild(tdReps); tr.appendChild(tdLoad);
+        });
+      });
+
+      syncSessionNamesAcrossBlocks();
+      updateUndoRedoButtons();
+    }
+
+    async function removeLastSession(){
+      if (sessionCount <= 1) return;
+
+      const ok = await openConfirm("Remove last session from all blocks?");
+      if (!ok) return;
+
+      pushUndo();
+
+      [...blocksEl.querySelectorAll(".block-card")].forEach(card => {
+        const table = card.querySelector("table");
+        const groupRow = table.querySelector(".groupHeaderRow");
+        const subRow = table.querySelector(".subHeaderRow");
+        const tbody = table.querySelector("tbody");
+
+        groupRow.removeChild(groupRow.lastElementChild);
+
+        subRow.removeChild(subRow.lastElementChild);
+        subRow.removeChild(subRow.lastElementChild);
+        subRow.removeChild(subRow.lastElementChild);
+
+        [...tbody.children].forEach(tr => {
+          tr.removeChild(tr.lastElementChild);
+          tr.removeChild(tr.lastElementChild);
+          tr.removeChild(tr.lastElementChild);
+        });
+      });
+
+      sessionCount -= 1;
+      syncSessionNamesAcrossBlocks();
+      updateUndoRedoButtons();
+    }
+
+    function wireCard(card){
+      const addExBtn = card.querySelector('[data-action="add-exercise"]');
+      const remExBtn = card.querySelector('[data-action="remove-exercise"]');
+      const addSessionBtn = card.querySelector('[data-action="add-session"]');
+      const remSessionBtn = card.querySelector('[data-action="remove-session"]');
+
+      if (addExBtn){
+        addExBtn.onclick = () => {
+          pushUndo();
+          addExerciseRow(card);
+          updateUndoRedoButtons();
+        };
+      }
+      if (remExBtn){
+        remExBtn.onclick = () => removeLastExerciseRow(card);
+      }
+      if (addSessionBtn){
+        addSessionBtn.onclick = () => addSession();
+      }
+      if (remSessionBtn){
+        remSessionBtn.onclick = () => removeLastSession();
+      }
+
+      const intensitySelect = card.querySelector('[data-role="intensity"]');
+      if (intensitySelect){
+        intensitySelect.onchange = (e) => {
+          card.dataset.intensity = e.target.value;
+        };
+      }
+
+      card.querySelectorAll('[data-role="session-name"]').forEach(inp => {
+        inp.oninput = () => syncSessionNamesAcrossBlocks();
+      });
+    }
+
+    function wireAllCards(){
+      blocksEl.querySelectorAll(".block-card").forEach(card => wireCard(card));
+    }
+
+    function buildCard({type, index}){
+      const card = document.createElement("section");
+      card.className = "block-card";
+      card.dataset.type = type;
+
+      if (type === "week"){
+        card.dataset.week = String(index);
+        card.dataset.intensity = "low";
+      } else {
+        card.dataset.test = String(index);
+      }
+
+      const head = document.createElement("div");
+      head.className = "block-head";
+
+      const left = document.createElement("div");
+      left.className = "block-left";
+
+      const name = document.createElement("input");
+      name.className = "block-name";
+      name.value = type === "week" ? `Week ${index}` : `Test ${index}`;
+      ensureUid(name);
+      left.appendChild(name);
+
+      const right = document.createElement("div");
+      right.className = "block-right";
+
+      const addEx = document.createElement("button");
+      addEx.className = "btn";
+      addEx.type = "button";
+      addEx.textContent = "Add exercise";
+      addEx.dataset.action = "add-exercise";
+
+      const remEx = document.createElement("button");
+      remEx.className = "btn danger";
+      remEx.type = "button";
+      remEx.textContent = "Remove last exercise";
+      remEx.dataset.action = "remove-exercise";
+
+      const addS = document.createElement("button");
+      addS.className = "btn";
+      addS.type = "button";
+      addS.textContent = "Add session";
+      addS.dataset.action = "add-session";
+
+      const remS = document.createElement("button");
+      remS.className = "btn danger";
+      remS.type = "button";
+      remS.textContent = "Remove last session";
+      remS.dataset.action = "remove-session";
+
+      right.appendChild(addEx);
+      right.appendChild(remEx);
+      right.appendChild(addS);
+      right.appendChild(remS);
+
+      head.appendChild(left);
+      head.appendChild(right);
+
+      const tableWrap = document.createElement("div");
+      tableWrap.className = "table-wrap";
+
+      const table = document.createElement("table");
+      table.appendChild(buildTableHead({
+        type,
+        weekIndex: type === "week" ? index : null,
+        testIndex: type === "test" ? index : null,
+        intensity: "low"
+      }));
+
+      const tbody = document.createElement("tbody");
+      table.appendChild(tbody);
+
+      tableWrap.appendChild(table);
+      card.appendChild(head);
+      card.appendChild(tableWrap);
+
+      addExerciseRow(card);
+      addExerciseRow(card);
+      addExerciseRow(card);
+
+      wireCard(card);
+      return card;
+    }
+
+    function addWeek(){
+      pushUndo();
+      weekCount += 1;
+      const card = buildCard({type:"week", index:weekCount});
+      blocksEl.appendChild(card);
+      syncSessionNamesAcrossBlocks();
+      updateUndoRedoButtons();
+    }
+
+    function addTest(){
+      pushUndo();
+      testCount += 1;
+      const card = buildCard({type:"test", index:testCount});
+      blocksEl.appendChild(card);
+      syncSessionNamesAcrossBlocks();
+      updateUndoRedoButtons();
+    }
+
+    async function removeLastOfType(type){
+      const list = [...blocksEl.querySelectorAll(`.block-card[data-type="${type}"]`)];
+      if (!list.length) return;
+
+      const msg = type === "week" ? "Delete last week?" : "Delete last test?";
+      const ok = await openConfirm(msg);
+      if (!ok) return;
+
+      pushUndo();
+      blocksEl.removeChild(list[list.length - 1]);
+      updateUndoRedoButtons();
+    }
+
+    addWeekBtn.addEventListener("click", addWeek);
+    removeWeekBtn.addEventListener("click", () => removeLastOfType("week"));
+    addTestBtn.addEventListener("click", addTest);
+    removeTestBtn.addEventListener("click", () => removeLastOfType("test"));
+
+    // start
+    addWeek();
+    updateUndoRedoButtons();
+  </script>
+</body>
+</html>
